@@ -25,7 +25,7 @@ module FriendlyShipping
                     xml.Machinable(machinable(package))
                     package_options = options.options_for_package(package)
                     xml.MailType(package_options.mail_type_code)
-                    # xml.ValueOfContents(package.items_value)
+                    xml.ValueOfContents(package.items_value)
                     xml.Country(shipment.destination.country)
                     xml.Container(package_options.container_code)
                     if package_options.transmit_dimensions && package_options.container_code == 'VARIABLE'
