@@ -8,30 +8,15 @@ RSpec.describe FriendlyShipping::Services::UspsInternational::RateEstimatePackag
   let(:package_id) { 'my_package_id' }
 
   [
-    :box_name,
     :commercial_pricing,
     :commercial_plus_pricing,
+    :container,
     :mail_type,
     :rectangular,
     :shipping_method,
     :transmit_dimensions
   ].each do |message|
     it { is_expected.to respond_to(message) }
-  end
-
-  describe 'box_name' do
-    context 'when setting it to something that is not a USPS box' do
-      subject do
-        described_class.new(
-          package_id: package_id,
-          box_name: :package
-        )
-      end
-
-      it 'become "variable"' do
-        expect(subject.box_name).to eq(:variable)
-      end
-    end
   end
 
   describe 'commercial_pricing' do
@@ -61,6 +46,51 @@ RSpec.describe FriendlyShipping::Services::UspsInternational::RateEstimatePackag
       expect(described_class.new(
           package_id: package_id,
         ).commercial_plus_pricing).to eq("N")
+    end
+  end
+
+  describe 'container' do
+    it 'is VARIABLE by default' do
+      expect(described_class.new(
+        package_id: package_id,
+      ).container).to eq("VARIABLE")
+    end
+
+    it 'raises an exception when not recognized type' do
+      expect{ described_class.new(
+        container: :invalid,
+        package_id: package_id,
+      ) }.to raise_error(KeyError)
+    end
+  end
+
+  describe 'mail_type' do
+    it 'is ALL by default' do
+      expect(described_class.new(
+        package_id: package_id,
+      ).mail_type).to eq("ALL")
+    end
+
+    it 'raises an exception when not recognized type' do
+      expect{ described_class.new(
+        mail_type: :invalid,
+        package_id: package_id,
+      ) }.to raise_error(KeyError)
+    end
+  end
+
+  describe 'rectangular' do
+    it 'is false if container is ROLL' do
+      expect(described_class.new(
+        package_id: package_id,
+        container: :roll,
+      ).rectangular).to be(false)
+    end
+
+    it 'is true by default' do
+      expect(described_class.new(
+        package_id: package_id,
+      ).rectangular).to be(true)
     end
   end
 end

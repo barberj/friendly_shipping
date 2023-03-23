@@ -14,27 +14,6 @@ module FriendlyShipping
         # This combines all the things we want to filter out.
         SERVICE_NAME_SUBSTITUTIONS = /#{ESCAPING_AND_SYMBOLS}|#{LEADING_USPS}/.freeze
 
-        # Often we get a multitude of rates for the same service given some combination of
-        # Box type and (see below) and "Hold for Pickup" service. This creates a regular expression
-        # with groups named after the keys from the `Usps::CONTAINERS` constant.
-        # Unfortunately, the keys don't correspond directly to the codes we use when serializing the
-        # request.
-        BOX_REGEX = {
-          flat_rate_boxes: 'Flat Rate Box',
-          large_flat_rate_box: 'Large Flat Rate Box',
-          medium_flat_rate_box: 'Medium Flat Rate Box',
-          small_flat_rate_box: 'Small Flat Rate Box',
-          flat_rate_envelope: 'Flat Rate Envelope',
-          legal_flat_rate_envelope: 'Legal Flat Rate Envelope',
-          padded_flat_rate_envelope: 'Padded Flat Rate Envelope',
-          gift_card_flat_rate_envelope: 'Gift Card Flat Rate Envelope',
-          window_flat_rate_envelope: 'Window Flat Rate Envelope',
-          small_flat_rate_envelope: 'Small Flat Rate Envelope',
-          large_envelope: 'Large Envelope',
-          parcel: 'Parcel',
-          postcards: 'Postcards'
-        }.map { |k, v| "(?<#{k}>#{v})" }.join("|").freeze
-
         # The tags used in the rate node that we get information from.
         SERVICE_CODE_TAG = 'ID'
         SERVICE_NAME_TAG = 'SvcDescription'
@@ -88,11 +67,6 @@ module FriendlyShipping
             #
             shipping_method = SHIPPING_METHODS.find { |sm| sm.service_code == service_code }
 
-            # We find out the box name using a bit of Regex magic using named captures. See the `BOX_REGEX`
-            # constant above.
-            box_name_match = service_name.match(/#{BOX_REGEX}/)
-            box_name = box_name_match ? box_name_match.named_captures.compact.keys.last.to_sym : :variable
-
             # Combine all the gathered information in a FriendlyShipping::Rate object.
             # Careful: This rate is only for one package within the shipment, and we get multiple
             # rates per package for the different shipping method/box/hold for pickup combinations.
@@ -101,7 +75,6 @@ module FriendlyShipping
               amounts: { package.id => rate },
               data: {
                 package: package,
-                box_name: box_name,
                 days_to_delivery: days_to_delivery,
                 full_mail_service: service_name,
                 service_code: service_code,
